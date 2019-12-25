@@ -1,0 +1,126 @@
+FROM balenalib/raspberrypi3-python:3.6
+
+ARG DEVICE
+
+# Install packages for apt repo
+RUN apt-get -qq update && apt-get -qq install --no-install-recommends -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    wget \
+    gnupg-agent \
+    dirmngr \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get -qq update && apt-get -qq install --no-install-recommends -y \
+ git \
+ libx264-dev \
+ pkg-config \
+ autoconf \
+ automake \
+ libtool \
+ libraspberrypi0 \
+ libraspberrypi-dev \
+ # OpenCV dependencies
+ build-essential \
+ cmake \
+ unzip \
+ pkg-config \
+ libjpeg-dev \
+ libpng-dev \
+ libtiff-dev \
+ libavcodec-dev \
+ libavformat-dev \
+ libswscale-dev \
+ libv4l-dev \
+ libxvidcore-dev \
+ libx264-dev \
+ libgtk-3-dev \
+ libatlas-base-dev \
+ gfortran \
+ # Coral USB Python API Dependencies
+ libusb-1.0-0 \
+ python3-numpy \
+ libc++1 \
+ libc++abi1 \
+ libunwind8 \
+ libgcc1 \
+ # VAAPI drivers for Intel hardware accel
+ #libva-drm2 libva2 i965-va-driver vainfo \
+ && rm -rf /var/lib/apt/lists/* 
+
+# Install core packages 
+RUN  pip install -U pip \
+ numpy \
+ Flask \
+ paho-mqtt \
+ PyYAML \
+ Pillow
+
+# Download & build OpenCV
+# TODO: use multistage build to reduce image size: 
+#   https://medium.com/@denismakogon/pain-and-gain-running-opencv-application-with-golang-and-docker-on-alpine-3-7-435aa11c7aec
+#   https://www.merixstudio.com/blog/docker-multi-stage-builds-python-development/
+RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/4.0.1.zip
+RUN cd /usr/local/src/ \
+ && unzip 4.0.1.zip \
+ && rm 4.0.1.zip \
+ && cd /usr/local/src/opencv-4.0.1/ \
+ && mkdir build \
+ && cd /usr/local/src/opencv-4.0.1/build \ 
+ && cmake -D CMAKE_INSTALL_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local/ .. \
+ && make -j4 \
+ && make install \
+ && ldconfig \
+ && rm -rf /usr/local/src/opencv-4.0.1
+
+# Download and install EdgeTPU libraries for Coral
+RUN wget https://dl.google.com/coral/edgetpu_api/edgetpu_api_latest.tar.gz -O edgetpu_api.tar.gz --trust-server-names \
+  && tar xzf edgetpu_api.tar.gz
+
+COPY scripts/install_edgetpu_api.sh edgetpu_api/install.sh
+
+RUN cd edgetpu_api \
+  && /bin/bash install.sh
+
+#RUN python -c "import sys; print(sys.path)"
+#RUN ls -l /usr/local/lib/python3.6/site-packages
+
+# Copy a python 3.6 version
+RUN cd /usr/local/lib/python3.6/site-packages/edgetpu/swig/ \
+  && ln -s _edgetpu_cpp_wrapper.cpython-35m-arm-linux-gnueabihf.so _edgetpu_cpp_wrapper.cpython-36m-arm-linux-gnueabihf.so
+
+# symlink the model and labels
+RUN wget https://dl.google.com/coral/canned_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite -O mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --trust-server-names
+RUN wget https://dl.google.com/coral/canned_models/coco_labels.txt -O coco_labels.txt --trust-server-names
+RUN ln -s mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite /frozen_inference_graph.pb
+RUN ln -s /coco_labels.txt /label_map.pbtext
+
+# Install libfdk_aac for ffmpeg
+RUN git clone https://github.com/mstorsjo/fdk-aac.git
+RUN cd fdk-aac && \
+  ./autogen.sh && \
+  ./configure --prefix=/usr/local --enable-shared --enable-static && \
+  make -j 4 && \
+  make install && \
+  ldconfig
+# Install ffmpeg with Raspberry Pi hardware GPU support
+RUN git clone https://github.com/FFmpeg/FFmpeg.git
+RUN cd FFmpeg && \
+  ./configure --prefix=/usr/local --arch=armel --target-os=linux --enable-omx --enable-omx-rpi --enable-nonfree --enable-gpl --enable-libfdk-aac --enable-mmal --enable-libx264 --enable-decoder=h264 --enable-network --enable-protocol=tcp --enable-demuxer=rtsp && \
+  make -j 4 && \
+  make install
+
+# Minimize image size 
+RUN (apt-get autoremove -y; \
+     apt-get autoclean -y)
+RUN rm -rf FFmpeg fdk-aac
+
+WORKDIR /opt/frigate/
+ADD frigate frigate/
+COPY detect_objects.py .
+COPY benchmark.py .
+
+CMD ["python3", "-u", "detect_objects.py"]
+
