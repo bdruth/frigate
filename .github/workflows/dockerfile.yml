@@ -11,6 +11,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Enable emulation
-      run: docker run --rm --privileged "simple-qemu:arm" -p yes
+      run: docker run --rm --privileged "meedamian/simple-qemu:arm" -p yes
     - name: Build the Docker image
       run: docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
