@@ -72,18 +72,19 @@ RUN \
     binutils-arm-linux-gnueabihf \
     && \
   rm -rf /var/lib/apt/lists/*
-RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/4.0.1.zip
+ENV opencv_version 4.3.0
+RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/${opencv_version}.zip
 RUN cd /usr/local/src/ \
- && unzip 4.0.1.zip \
- && rm 4.0.1.zip \
- && cd /usr/local/src/opencv-4.0.1/ \
+ && unzip ${opencv_version}.zip \
+ && rm ${opencv_version}.zip \
+ && cd /usr/local/src/opencv-${opencv_version}/ \
  && mkdir build \
- && cd /usr/local/src/opencv-4.0.1/build \ 
+ && cd /usr/local/src/opencv-${opencv_version}/build \ 
  && cmake -D CMAKE_INSTALL_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr/local/ .. \
  && make -j4 \
  && make install \
  && ldconfig \
- && rm -rf /usr/local/src/opencv-4.0.1
+ && rm -rf /usr/local/src/opencv-${opencv_version}
 
 # Download and install EdgeTPU libraries for Coral
 RUN wget https://dl.google.com/coral/edgetpu_api/edgetpu_api_latest.tar.gz -O edgetpu_api.tar.gz --trust-server-names \
