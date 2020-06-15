@@ -62,6 +62,17 @@ RUN  pip install -U pip \
 # TODO: use multistage build to reduce image size: 
 #   https://medium.com/@denismakogon/pain-and-gain-running-opencv-application-with-golang-and-docker-on-alpine-3-7-435aa11c7aec
 #   https://www.merixstudio.com/blog/docker-multi-stage-builds-python-development/
+RUN \ # from https://github.com/opencv-infrastructure/opencv-worker-config/blob/linux/images/arm-gnueabihf/docker/Dockerfile
+  apt-get update && \
+  apt-get install -y --no-install-recommends \
+    cmake3 build-essential ccache ninja-build \
+    python \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
+    binutils-arm-linux-gnueabihf \
+    pkg-config-arm-linux-gnueabihf \
+    && \
+  rm -rf /var/lib/apt/lists/*
 RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/4.0.1.zip
 RUN cd /usr/local/src/ \
  && unzip 4.0.1.zip \
