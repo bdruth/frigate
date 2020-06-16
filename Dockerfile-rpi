@@ -118,6 +118,7 @@ RUN cd fdk-aac && \
   ldconfig
 # Install ffmpeg with Raspberry Pi hardware GPU support
 RUN git clone https://github.com/FFmpeg/FFmpeg.git
+RUN git checkout n4.1.5
 RUN cd FFmpeg && \
   ./configure --prefix=/usr/local --arch=armel --target-os=linux --enable-omx --enable-omx-rpi --enable-nonfree --enable-gpl --enable-libfdk-aac --enable-mmal --enable-libx264 --enable-decoder=h264 --enable-network --enable-protocol=tcp --enable-demuxer=rtsp && \
   make -j 4 && \
