@@ -37,6 +37,7 @@ if [[ -f "${LIBEDGETPU_DST}" ]]; then
   rm -f "${LIBEDGETPU_DST}"
 fi
 
+mkdir -p /usr/lib/${HOST_GNU_TYPE}
 cp -p "${LIBEDGETPU_SRC}" "${LIBEDGETPU_DST}"
 ldconfig
 echo "Done."
