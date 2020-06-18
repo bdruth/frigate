@@ -117,6 +117,10 @@ RUN cd fdk-aac && \
   make install && \
   ldconfig
 # Install ffmpeg with Raspberry Pi hardware GPU support
+RUN \
+  apt-get update && \
+  apt-get install -y --no-install-recommends libomxil-bellagio-dev && \
+  rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/FFmpeg/FFmpeg.git
 RUN cd FFmpeg && \
   git checkout n4.1.5 && \
