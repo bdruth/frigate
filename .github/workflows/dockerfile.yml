@@ -11,15 +11,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Echo env vars
-        run: echo ${GITHUB_ACTOR}
-      - name: Echo env vars
-        run: echo ${GITHUB_REPOSITORY}
-      - name: Echo env vars
-        run: env
+      - uses: satackey/action-docker-layer-caching@v0.0.4
       - name: Build the Docker image
         run: docker build --file Dockerfile-rpi --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest .
       - name: GitHub Packages login
-        run: docker login docker.pkg.github.com -u ${GITHUB_ACTOR} -p ${GITHUB_TOKEN}
+        run: docker login docker.pkg.github.com -u ${GITHUB_ACTOR} -p ${{ secrets.GITHUB_TOKEN }}
       - name: Push image to GitHub Packages
         run: docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest
