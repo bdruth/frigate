@@ -10,12 +10,12 @@ jobs:
     runs-on: [self-hosted, linux, ARM64]
 
     steps:
-    # - name: Build the Docker image
-    #   uses: actions/checkout@v1
-      # run: docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
       - name: Echo env vars
         run: echo ${GITHUB_ACTOR}
       - name: Echo env vars
         run: echo ${GITHUB_REPOSITORY}
       - name: Echo env vars
         run: env
+      - name: Build the Docker image
+        uses: actions/checkout@v1
+        run: docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
