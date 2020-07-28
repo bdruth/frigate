@@ -12,6 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build the Docker image
-      run: echo ${GITHUB_ACTOR}
-      run: echo ${GITHUB_REPOSITORY}
-      run: docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
+      run: 
+        - echo ${GITHUB_ACTOR}
+        - echo ${GITHUB_REPOSITORY}
+        # - docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
