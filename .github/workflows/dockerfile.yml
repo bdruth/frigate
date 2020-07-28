@@ -18,4 +18,8 @@ jobs:
       - name: Echo env vars
         run: env
       - name: Build the Docker image
-        run: docker build . --file Dockerfile-rpi --tag frigate-rpi:$(date +%s)
+        run: docker build --file Dockerfile-rpi --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest .
+      - name: GitHub Packages login
+        run: docker login docker.pkg.github.com -u ${GITHUB_ACTOR} -p ${GITHUB_TOKEN}
+      - name: Push image to GitHub Packages
+        run: docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest
