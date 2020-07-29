@@ -68,12 +68,12 @@ class CameraWatchdog(threading.Thread):
 
         while True:
             # wait a bit before checking
-            time.sleep(2)
+            time.sleep(10)
 
-            if (datetime.datetime.now().timestamp() - self.camera.frame_time.value) > 2:
+            if (datetime.datetime.now().timestamp() - self.camera.frame_time.value) > 5:
                 print("last frame is more than 2 seconds old, restarting camera capture...")
                 self.camera.start_or_restart_capture()
-                time.sleep(5)
+                time.sleep(10)
 
 # Thread to read the stdout of the ffmpeg process and update the current frame
 class CameraCapture(threading.Thread):
