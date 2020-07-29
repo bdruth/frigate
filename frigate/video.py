@@ -68,10 +68,10 @@ class CameraWatchdog(threading.Thread):
 
         while True:
             # wait a bit before checking
-            time.sleep(10)
+            time.sleep(2)
 
-            if (datetime.datetime.now().timestamp() - self.camera.frame_time.value) > 10:
-                print("last frame is more than 10 seconds old, restarting camera capture...")
+            if (datetime.datetime.now().timestamp() - self.camera.frame_time.value) > 2:
+                print("last frame is more than 2 seconds old, restarting camera capture...")
                 self.camera.start_or_restart_capture()
                 time.sleep(5)
 
@@ -127,6 +127,9 @@ class Camera:
         self.take_frame = self.config.get('take_frame', 1)
         self.regions = self.config['regions']
         self.frame_shape = get_frame_shape(self.ffmpeg_input)
+        if (self.ffmpeg['resize_x'] and self.ffmpeg['resize_y']):
+          self.frame_shape = (self.ffmpeg['resize_y'], self.ffmpeg['resize_x'], self.frame_shape[2])
+        print("Frame shape: ", self.frame_shape[0], self.frame_shape[1], self.frame_shape[2])
         self.frame_size = self.frame_shape[0] * self.frame_shape[1] * self.frame_shape[2]
         self.mqtt_client = mqtt_client
         self.mqtt_topic_prefix = '{}/{}'.format(mqtt_prefix, self.name)

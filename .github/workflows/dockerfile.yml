@@ -16,7 +16,7 @@ jobs:
         with:
           key: frigate-rpi-${{ env.CPU_ARCH }}-{hash}
           restore-keys: |
-            frigate-rpi-${{ env.CPU_ARCH }}-{hash}
+            frigate-rpi-${{ env.CPU_ARCH }}-
       - name: Build the Docker image
         run: docker build --file Dockerfile-rpi --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest .
       - name: GitHub Packages login
