@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Set platform architecture
-        run: echo "::set-env name=CPU_ARCH::$(uname -m)"
+        run: echo "::set-env name=CPU_ARCH::$(docker run alpine uname -m 2>/dev/null)"
       - uses: satackey/action-docker-layer-caching@v0.0.4
         with:
           key: frigate-rpi-${{ env.CPU_ARCH }}-{hash}
