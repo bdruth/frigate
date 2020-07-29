@@ -10,7 +10,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+      - name: Set platform architecture
+        run: echo "::set-env name=CPU_ARCH::$(uname -m)"
       - uses: satackey/action-docker-layer-caching@v0.0.4
+        with:
+          key: frigate-rpi-${{ env.CPU_ARCH }}-{hash}
+          restore-keys: |
+            frigate-rpi-${{ env.CPU_ARCH }}-{hash}
       - name: Build the Docker image
         run: docker build --file Dockerfile-rpi --tag docker.pkg.github.com/${GITHUB_REPOSITORY}/frigate-rpi:latest .
       - name: GitHub Packages login
