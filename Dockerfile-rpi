@@ -93,11 +93,12 @@ RUN wget https://dl.google.com/coral/edgetpu_api/edgetpu_api_latest.tar.gz -O ed
 COPY scripts/install_edgetpu_api.sh edgetpu_api/install.sh
 
 RUN cd edgetpu_api \
-  && /bin/bash install.sh \
+ && /bin/bash install.sh \
 # Copy a python 3.6 version
-  && cd /usr/local/lib/python3.6/site-packages/edgetpu/swig/ \
-  && ln -s _edgetpu_cpp_wrapper.cpython-35m-arm-linux-gnueabihf.so _edgetpu_cpp_wrapper.cpython-36m-arm-linux-gnueabihf.so \
+ && cd /usr/local/lib/python3.6/site-packages/edgetpu/swig/ \
+ && ln -s _edgetpu_cpp_wrapper.cpython-35m-arm-linux-gnueabihf.so _edgetpu_cpp_wrapper.cpython-36m-arm-linux-gnueabihf.so \
 # symlink the model and labels
+ && cd / \
  && wget https://dl.google.com/coral/canned_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite -O mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --trust-server-names \
  && wget https://dl.google.com/coral/canned_models/coco_labels.txt -O coco_labels.txt --trust-server-names \
  && ln -s mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite /frozen_inference_graph.pb \
