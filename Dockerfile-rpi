@@ -11,7 +11,7 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends -y \
     gnupg-agent \
     dirmngr \
     software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* && (apt-get autoremove -y; apt-get autoclean -y)
 
 RUN apt-get -qq update && apt-get -qq install --no-install-recommends -y \
  git \
@@ -48,7 +48,7 @@ RUN apt-get -qq update && apt-get -qq install --no-install-recommends -y \
  libgcc1 \
  # VAAPI drivers for Intel hardware accel
  #libva-drm2 libva2 i965-va-driver vainfo \
- && rm -rf /var/lib/apt/lists/* 
+ && rm -rf /var/lib/apt/lists/* && (apt-get autoremove -y; apt-get autoclean -y)
 
 # Install core packages 
 RUN  pip install -U pip \
@@ -71,10 +71,10 @@ RUN \
     g++-arm-linux-gnueabihf \
     binutils-arm-linux-gnueabihf \
     && \
-  rm -rf /var/lib/apt/lists/*
+  rm -rf /var/lib/apt/lists/* && (apt-get autoremove -y; apt-get autoclean -y)
 ENV opencv_version 4.3.0
-RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/${opencv_version}.zip
-RUN cd /usr/local/src/ \
+RUN wget -q -P /usr/local/src/ --no-check-certificate https://github.com/opencv/opencv/archive/${opencv_version}.zip \
+ && cd /usr/local/src/ \
  && unzip ${opencv_version}.zip \
  && rm ${opencv_version}.zip \
  && cd /usr/local/src/opencv-${opencv_version}/ \
@@ -93,45 +93,43 @@ RUN wget https://dl.google.com/coral/edgetpu_api/edgetpu_api_latest.tar.gz -O ed
 COPY scripts/install_edgetpu_api.sh edgetpu_api/install.sh
 
 RUN cd edgetpu_api \
-  && /bin/bash install.sh
-
-#RUN python -c "import sys; print(sys.path)"
-#RUN ls -l /usr/local/lib/python3.6/site-packages
-
+  && /bin/bash install.sh \
 # Copy a python 3.6 version
-RUN cd /usr/local/lib/python3.6/site-packages/edgetpu/swig/ \
-  && ln -s _edgetpu_cpp_wrapper.cpython-35m-arm-linux-gnueabihf.so _edgetpu_cpp_wrapper.cpython-36m-arm-linux-gnueabihf.so
-
+  && cd /usr/local/lib/python3.6/site-packages/edgetpu/swig/ \
+  && ln -s _edgetpu_cpp_wrapper.cpython-35m-arm-linux-gnueabihf.so _edgetpu_cpp_wrapper.cpython-36m-arm-linux-gnueabihf.so \
 # symlink the model and labels
-RUN wget https://dl.google.com/coral/canned_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite -O mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --trust-server-names
-RUN wget https://dl.google.com/coral/canned_models/coco_labels.txt -O coco_labels.txt --trust-server-names
-RUN ln -s mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite /frozen_inference_graph.pb
-RUN ln -s /coco_labels.txt /label_map.pbtext
+ && cd \
+ && wget https://dl.google.com/coral/canned_models/mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite -O mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite --trust-server-names \
+ && wget https://dl.google.com/coral/canned_models/coco_labels.txt -O coco_labels.txt --trust-server-names \
+ && ln -s mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite /frozen_inference_graph.pb \
+ && ln -s coco_labels.txt /label_map.pbtext
 
 # Install libfdk_aac for ffmpeg
-RUN git clone https://github.com/mstorsjo/fdk-aac.git
-RUN cd fdk-aac && \
-  ./autogen.sh && \
-  ./configure --prefix=/usr/local --enable-shared --enable-static && \
-  make -j 4 && \
-  make install && \
-  ldconfig
-# Install ffmpeg with Raspberry Pi hardware GPU support
-RUN \
-  apt-get update && \
-  apt-get install -y --no-install-recommends libomxil-bellagio-dev && \
-  rm -rf /var/lib/apt/lists/*
-RUN git clone https://github.com/FFmpeg/FFmpeg.git
-RUN cd FFmpeg && \
-  git checkout n4.1.5 && \
-  ./configure --prefix=/usr/local --arch=armel --target-os=linux --enable-omx --enable-omx-rpi --enable-nonfree --enable-gpl --enable-libfdk-aac --enable-mmal --enable-libx264 --enable-decoder=h264 --enable-network --enable-protocol=tcp --enable-demuxer=rtsp && \
-  make -j 4 && \
-  make install
+RUN git clone https://github.com/mstorsjo/fdk-aac.git \
+ && cd fdk-aac \
+ && ./autogen.sh \
+ && ./configure --prefix=/usr/local --enable-shared --enable-static \
+ && make -j 4 \
+ && make install \
+ && ldconfig \
+ && cd .. \
+ && rm -rf fdk-aac
 
-# Minimize image size 
-RUN (apt-get autoremove -y; \
-     apt-get autoclean -y)
-RUN rm -rf FFmpeg fdk-aac
+# Install ffmpeg with Raspberry Pi hardware GPU support
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libomxil-bellagio-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && (apt-get autoremove -y; apt-get autoclean -y)
+
+RUN git clone https://github.com/FFmpeg/FFmpeg.git \
+ && cd FFmpeg \
+ && git checkout n4.1.5 \
+ && ./configure --prefix=/usr/local --arch=armel --target-os=linux --enable-omx --enable-omx-rpi --enable-nonfree --enable-gpl --enable-libfdk-aac --enable-mmal --enable-libx264 --enable-decoder=h264 --enable-network --enable-protocol=tcp --enable-demuxer=rtsp \
+ && make -j 4 \
+ && make install \
+ && ldconfig \
+ && cd .. \
+ && rm -rf FFmpeg
 
 WORKDIR /opt/frigate/
 ADD frigate frigate/
