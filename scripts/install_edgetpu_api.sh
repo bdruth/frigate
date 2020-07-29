@@ -11,7 +11,7 @@ if [[ "${CPU_ARCH}" == "x86_64" ]]; then
   echo "Recognized as Linux on x86_64."
   LIBEDGETPU_SUFFIX=x86_64
   HOST_GNU_TYPE=x86_64-linux-gnu
-elif [[ "${CPU_ARCH}" == "armv7l" ]]; then
+elif [[ "${CPU_ARCH}" == "armv7l" ]] || [[ "${CPU_ARCH}" == "armv8l" ]]; then
   echo "Recognized as Linux on ARM32 platform."
   LIBEDGETPU_SUFFIX=arm32
   HOST_GNU_TYPE=arm-linux-gnueabihf
